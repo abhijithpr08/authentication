@@ -1,0 +1,11 @@
+body {
+    font-family: Arial;
+    padding: 20px;
+}
+
+p {
+    background: #eee;
+    margin: 5px 0;
+    padding: 8px;
+    border-radius: 5px;
+}
