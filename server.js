@@ -2,7 +2,6 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const EventEmitter = require("events");
-const { text } = require("stream/consumers");
 
 const signupEvent = new EventEmitter();
 
@@ -11,16 +10,17 @@ signupEvent.on("userSignup", (user) => {
     console.log("Name:", user.name);
     console.log("Email:", user.email);
     console.log("Password:", user.password);
-    fs.writeFileSync("user.json",JSON.stringify(user),(err,data)=>{
-        if(err){
-            res.writeHead(500,{"Content-type":"text/plain"})
-            res.end()
+
+    let users = [];
+
+    if(fs.existsSync("users.json")){
+        const data = fs.readFileSync("users.json","utf-8");
+        if(data){
+            users = JSON.parse(data);
         }
-        else{
-            res.writeHead(200,{"content-type":"text/application"})
-            res.end(data)
-        }
-    })
+    }
+    users.push(user);
+    fs.writeFileSync("users.json",JSON.stringify(users,null,2));
 });
 
 const viewsDir = path.join(__dirname, "views");
@@ -104,7 +104,7 @@ const server = http.createServer((req, res) => {
 
             signupEvent.emit("userSignup", user);
 
-            res.writeHead(200,{ "Content-Type": "text/plain" });
+            res.writeHead(200, { "Content-Type": "text/plain" });
             res.end("Signup successful");
         });
     }
