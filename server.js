@@ -2,6 +2,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const EventEmitter = require("events");
+const { text } = require("stream/consumers");
 
 const signupEvent = new EventEmitter();
 
@@ -10,6 +11,16 @@ signupEvent.on("userSignup", (user) => {
     console.log("Name:", user.name);
     console.log("Email:", user.email);
     console.log("Password:", user.password);
+    fs.writeFileSync("user.json",JSON.stringify(user),(err,data)=>{
+        if(err){
+            res.writeHead(500,{"Content-type":"text/plain"})
+            res.end()
+        }
+        else{
+            res.writeHead(200,{"content-type":"text/application"})
+            res.end(data)
+        }
+    })
 });
 
 const viewsDir = path.join(__dirname, "views");
@@ -64,31 +75,26 @@ const server = http.createServer((req, res) => {
         let chunks = [];
 
         req.on("data", (chunk) => {
-            console.log("\nCHUNK RECEIVED:");
-            console.log(chunk); 
-            console.log(chunk.toString());
+            // console.log("\nCHUNK RECEIVED:");
+            // console.log(chunk); 
+            // console.log(chunk.toString());
 
             chunks.push(chunk);
         });
 
         req.on("end", () => {
 
-            console.log("\nALL CHUNKS RECEIVED");
+            // console.log("\nALL CHUNKS RECEIVED");
 
             const body = Buffer.concat(chunks).toString();
 
-            console.log("FULL BODY:");
-            console.log(body);
+            // console.log("FULL BODY:");
+            // console.log(body);
 
             const data = JSON.parse(body);
 
             const password = data.password;
             const confirm = data.confirm;
-
-            if (password !== confirm) {
-                res.writeHead(400);
-                return res.end("Passwords do not match");
-            }
 
             const user = {
                 name: data.name,
@@ -98,7 +104,7 @@ const server = http.createServer((req, res) => {
 
             signupEvent.emit("userSignup", user);
 
-            res.writeHead(200);
+            res.writeHead(200,{ "Content-Type": "text/plain" });
             res.end("Signup successful");
         });
     }
