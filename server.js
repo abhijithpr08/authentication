@@ -24,9 +24,11 @@ function serveView(file, res) {
 }
 
 function servePublic(file, res) {
+
     const ext = path.extname(file);
 
     let type = "text/plain";
+
     if (ext === ".css") type = "text/css";
     if (ext === ".js") type = "text/javascript";
 
@@ -42,7 +44,7 @@ const server = http.createServer((req, res) => {
     console.log(req.method, req.url);
 
     if (req.url.startsWith("/public/")) {
-        return servePublic(req.url.replace("/public/",""), res);
+        return servePublic(req.url.replace("/public/", ""), res);
     }
 
     if (req.method === "GET") {
@@ -59,32 +61,33 @@ const server = http.createServer((req, res) => {
 
         req.on("end", () => {
 
-            const body = Buffer.concat(buffers).toString();
-            const data = new URLSearchParams(body);
+            const raw = Buffer.concat(buffers).toString();
 
-            const password = data.get("password");
-            const confirm = data.get("confirm");
+            const data = JSON.parse(raw);
+
+            const { name, email, password, confirm } = data;
 
             if (password !== confirm) {
-                res.writeHead(400, { "Content-Type": "text/html" });
-                return res.end("<h3>Password mismatch</h3><a href='/signup'>Try again</a>");
+                res.writeHead(400, { "Content-Type": "text/plain" });
+                return res.end("Passwords do not match");
             }
 
             const user = {
-                name: data.get("name"),
-                email: data.get("email"),
+                name,
+                email,
                 password
             };
 
             signupEvent.emit("userSignup", user);
 
-            res.writeHead(200, { "Content-Type": "text/html" });
-            res.end("<h2>Signup Successful</h2><a href='/'>Home</a>");
+            res.writeHead(200, { "Content-Type": "text/plain" });
+            res.end("Signup successful");
+
         });
     }
 
 });
 
 server.listen(3000, () => {
-    console.log("\nhttp://localhost:3000 running...");
+    console.log("\nServer running at http://localhost:3000");
 });
